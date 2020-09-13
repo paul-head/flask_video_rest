@@ -3,6 +3,7 @@ import sqlalchemy as db
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
+import dotenv
 from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity
 from config import Config
 from apispec.ext.marshmallow import MarshmallowPlugin
@@ -10,6 +11,9 @@ from apispec import APISpec
 from flask_apispec.extension import FlaskApiSpec
 from schemas import VideoSchema, UserSchema, AuthSchema
 from flask_apispec import use_kwargs, marshal_with
+import logging
+
+dotenv.load_dotenv()
 
 app = Flask(__name__)
 app.config["JSONIFY_PRETTYPRINT_REGULAR"] = True
@@ -29,19 +33,35 @@ jwt = JWTManager(app)
 docs = FlaskApiSpec()
 docs.init_app(app)
 
-app.config.update({
-    "APISPEC_SPEC": APISpec(
-        title='videoblog',
-        version='v1',
-        openapi_version='2.0',
-        plugins=[MarshmallowPlugin()]
-    ),
-    'APISPEC_SWAGGER_URL': '/swagger/'
-})
+app.config.update(
+    {
+        "APISPEC_SPEC": APISpec(
+            title="videoblog",
+            version="v1",
+            openapi_version="2.0",
+            plugins=[MarshmallowPlugin()],
+        ),
+        "APISPEC_SWAGGER_URL": "/swagger/",
+    }
+)
 
 from models import *
 
 Base.metadata.create_all(bind=engine)
+
+
+def setup_logger():
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.DEBUG)
+
+    formatter = logging.Formatter("%(asctime)s:%(name)s:%(levelname)s:%(message)s")
+    file_handler = logging.FileHandler("log/api.log")
+    file_handler.setFormatter(formatter)
+    logger.addHandler(file_handler)
+    return logger
+
+
+logger = setup_logger()
 
 
 @app.route("/tutorials", methods=["GET"])
@@ -50,9 +70,13 @@ Base.metadata.create_all(bind=engine)
 def get_list():
     try:
         user_id = get_jwt_identity()
+        # raise Exception('Ошибка')
         videos = Video.query.filter(Video.user_id == user_id).all()
     except Exception as e:
-        return {'message': str(e)}, 400
+        logger.warning(
+            f"user:{user_id} tutorials - read action failed with errors: {e}"
+        )
+        return {"message": str(e)}, 400
     return videos
 
 
@@ -67,7 +91,10 @@ def update_list(**kwargs):
         session.add(new_one)
         session.commit()
     except Exception as e:
-        return {'message': str(e)}, 400
+        logger.warning(
+            f"user:{user_id} tutorials - create action failed with errors: {e}"
+        )
+        return {"message": str(e)}, 400
     return new_one
 
 
@@ -78,14 +105,19 @@ def update_list(**kwargs):
 def update_tutorial(tutorial_id, **kwargs):
     try:
         user_id = get_jwt_identity()
-        item = Video.query.filter(Video.id == tutorial_id, Video.user_id == user_id).first()
+        item = Video.query.filter(
+            Video.id == tutorial_id, Video.user_id == user_id
+        ).first()
         if not item:
             return {"message": "No tutorials with this id"}, 400
         for key, value in kwargs.items():
             setattr(item, key, value)
         session.commit()
     except Exception as e:
-        return {'message': str(e)}, 400
+        logger.warning(
+            f"user:{user_id} tutorials: {tutorial_id} - update action failed with errors: {e}"
+        )
+        return {"message": str(e)}, 400
     return item
 
 
@@ -95,13 +127,18 @@ def update_tutorial(tutorial_id, **kwargs):
 def delete_tutorial(tutorial_id):
     try:
         user_id = get_jwt_identity()
-        item = Video.query.filter(Video.id == tutorial_id, Video.user_id == user_id).first()
+        item = Video.query.filter(
+            Video.id == tutorial_id, Video.user_id == user_id
+        ).first()
         if not item:
             return {"message": "No tutorials with this id"}, 400
         session.delete(item)
         session.commit()
     except Exception as e:
-        return {'message': str(e)}, 400
+        logger.warning(
+            f"user:{user_id} tutorials: {tutorial_id} - delete action failed with errors: {e}"
+        )
+        return {"message": str(e)}, 400
     return "", 204
 
 
@@ -115,19 +152,21 @@ def register(**kwargs):
         session.commit()
         token = user.get_token()
     except Exception as e:
-        return {'message': str(e)}, 400
+        logger.warning(f"registration failed with errors: {e}")
+        return {"message": str(e)}, 400
     return {"access_token": token}
 
 
 @app.route("/login", methods=["POST"])
-@use_kwargs(UserSchema(only=('email', 'password')))
+@use_kwargs(UserSchema(only=("email", "password")))
 @marshal_with(AuthSchema)
 def login(**kwargs):
     try:
         user = User.authenticate(**kwargs)
         token = user.get_token()
     except Exception as e:
-        return {'message': str(e)}, 400
+        logger.warning(f'login with email {kwargs["email"]} failed with errors: {e}')
+        return {"message": str(e)}, 400
     return {"access_token": token}
 
 
@@ -136,12 +175,23 @@ def shutdown_session(exception=None):
     session.remove()
 
 
+@app.errorhandler(422)
+def error_handler(err):
+    headers = err.data.get("headers", None)
+    messages = err.data.get("messages", ["Invalid request"])
+    logger.warning(f"Ivalid input params: {messages}")
+    if headers:
+        return jsonify({"message": messages}), 400, headers
+    else:
+        return jsonify({"message": messages}), 400
+
+
 docs.register(get_list)
 # docs.register(update_list)
 # docs.register(update_tutorial)
 docs.register(delete_tutorial)
-#docs.register(register)
-#docs.register(login)
+# docs.register(register)
+# docs.register(login)
 
 
 if __name__ == "__main__":
