@@ -70,8 +70,7 @@ logger = setup_logger()
 def get_list():
     try:
         user_id = get_jwt_identity()
-        # raise Exception('Ошибка')
-        videos = Video.query.filter(Video.user_id == user_id).all()
+        videos = Video.get_user_list(user_id=user_id)
     except Exception as e:
         logger.warning(
             f"user:{user_id} tutorials - read action failed with errors: {e}"
@@ -88,8 +87,7 @@ def update_list(**kwargs):
     try:
         user_id = get_jwt_identity()
         new_one = Video(user_id=user_id, **kwargs)
-        session.add(new_one)
-        session.commit()
+        new_one.save()
     except Exception as e:
         logger.warning(
             f"user:{user_id} tutorials - create action failed with errors: {e}"
@@ -105,14 +103,8 @@ def update_list(**kwargs):
 def update_tutorial(tutorial_id, **kwargs):
     try:
         user_id = get_jwt_identity()
-        item = Video.query.filter(
-            Video.id == tutorial_id, Video.user_id == user_id
-        ).first()
-        if not item:
-            return {"message": "No tutorials with this id"}, 400
-        for key, value in kwargs.items():
-            setattr(item, key, value)
-        session.commit()
+        item = Video.get(tutorial_id, user_id)
+        item.update(**kwargs)
     except Exception as e:
         logger.warning(
             f"user:{user_id} tutorials: {tutorial_id} - update action failed with errors: {e}"
@@ -127,13 +119,8 @@ def update_tutorial(tutorial_id, **kwargs):
 def delete_tutorial(tutorial_id):
     try:
         user_id = get_jwt_identity()
-        item = Video.query.filter(
-            Video.id == tutorial_id, Video.user_id == user_id
-        ).first()
-        if not item:
-            return {"message": "No tutorials with this id"}, 400
-        session.delete(item)
-        session.commit()
+        item = Video.get(tutorial_id, user_id)
+        item.delete()
     except Exception as e:
         logger.warning(
             f"user:{user_id} tutorials: {tutorial_id} - delete action failed with errors: {e}"
