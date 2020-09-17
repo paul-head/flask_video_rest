@@ -1,5 +1,5 @@
 from xmlrpc.server import ServerHTMLDoc
-from app import client
+from . import client
 from models import Video
 
 
