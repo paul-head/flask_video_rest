@@ -1,5 +1,5 @@
 from sqlalchemy.orm import relationship
-from app import db, session, Base
+from . import db, session, Base
 from flask_jwt_extended import create_access_token
 from datetime import timedelta
 from passlib.hash import bcrypt
@@ -21,6 +21,18 @@ class Video(Base):
             session.rollback()
             raise
         return videos
+
+
+    @classmethod
+    def get_list(cls):
+        try:
+            videos = cls.query.all()
+            session.commit()
+        except Exception:
+            session.rollback()
+            raise
+        return videos
+
 
     def save(self):
         try:
