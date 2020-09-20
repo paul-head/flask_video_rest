@@ -8,7 +8,7 @@ from flask_apispec import use_kwargs, marshal_with
 from videoblog.base_view import BaseView
 
 
-users = Blueprint('users', __name__)
+users = Blueprint("users", __name__)
 
 
 @users.route("/register", methods=["POST"])
@@ -47,11 +47,10 @@ class ProfileView(BaseView):
         try:
             user = User.query.get(user_id)
             if not user:
-                raise Exception('User not found')
+                raise Exception("User not found")
         except Exception as e:
-            logger.warning(f'user: {user_id} - fail to read profile: {e}')
+            logger.warning(f"user: {user_id} - fail to read profile: {e}")
         return user
-
 
 
 @users.errorhandler(422)
@@ -67,4 +66,4 @@ def error_handler(err):
 
 # docs.register(register, blueprint='users')
 # docs.register(login, blueprint='users')
-ProfileView.register(users, docs, '/profile', 'profileview')
+ProfileView.register(users, docs, "/profile", "profileview")

@@ -4,7 +4,6 @@ from . import logger
 
 
 class BaseView(MethodResource):
-
     @classmethod
     def register(cls, blueprint, spec, url, name):
         blueprint.add_url_rule(url, view_func=cls.as_view(name))

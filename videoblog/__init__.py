@@ -43,6 +43,7 @@ app.config.update(
 )
 
 from .models import *
+
 Base.metadata.create_all(bind=engine)
 
 

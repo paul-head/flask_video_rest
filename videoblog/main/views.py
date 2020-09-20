@@ -7,7 +7,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from videoblog.base_view import BaseView
 
 
-videos = Blueprint('videos', __name__)
+videos = Blueprint("videos", __name__)
 
 
 class ListView(BaseView):
@@ -99,8 +99,8 @@ def error_handler(err):
         return jsonify({"message": messages}), 400
 
 
-docs.register(get_list, blueprint='videos')
+docs.register(get_list, blueprint="videos")
 # docs.register(update_list, blueprint='videos')
 # docs.register(update_tutorial, blueprint='videos')
-docs.register(delete_tutorial, blueprint='videos')
-ListView.register(videos, docs, '/main', 'listview')
+docs.register(delete_tutorial, blueprint="videos")
+ListView.register(videos, docs, "/main", "listview")
