@@ -22,7 +22,6 @@ class Video(Base):
             raise
         return videos
 
-
     @classmethod
     def get_list(cls):
         try:
@@ -32,7 +31,6 @@ class Video(Base):
             session.rollback()
             raise
         return videos
-
 
     def save(self):
         try:

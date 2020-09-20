@@ -4,3 +4,6 @@
 2020-09-15 18:23:27,871:app:WARNING:login with email usertest3@usertest.com failed with errors: No row was found for one()
 2020-09-16 15:20:17,712:app:WARNING:Ivalid input params: {'json': {'': ['Unknown field.']}}
 2020-09-16 15:35:45,226:app:WARNING:user:3 tutorials: 1 - delete action failed with errors: No tutuorials with this id
+2020-09-19 20:48:44,608:videoblog:WARNING:login with email testuser1@testuser.com failed with errors: No row was found for one()
+2020-09-19 20:49:17,930:videoblog:WARNING:login with email testuser1@testuser.com failed with errors: No row was found for one()
+2020-09-19 21:50:26,089:videoblog:WARNING:login with email testuser1@testuser.com failed with errors: JWT_SECRET_KEY or flask SECRET_KEY must be set when using symmetric algorithm "HS256"
