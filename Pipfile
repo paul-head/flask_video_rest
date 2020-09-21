@@ -16,6 +16,7 @@ marshmallow = "*"
 flask-apispec = "*"
 python-dotenv = "*"
 black = "*"
+gunicorn = "*"
 
 [requires]
 python_version = "3.8"
