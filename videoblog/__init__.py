@@ -10,6 +10,8 @@ from apispec.ext.marshmallow import MarshmallowPlugin
 from apispec import APISpec
 from flask_apispec.extension import FlaskApiSpec
 import logging
+from celery import Celery
+
 
 dotenv.load_dotenv()
 
@@ -21,6 +23,9 @@ app.config.from_object(Config)
 client = app.test_client()
 
 engine = Config.SQLALCHEMY_DATABASE_URI
+# engine = create_engine('sqlite:///db.sqlite')
+
+
 session = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=engine))
 
 Base = declarative_base()
@@ -59,6 +64,12 @@ def setup_logger():
 
 
 logger = setup_logger()
+
+celery = Celery(
+    __name__, broker="amqp://async_python:12345@localhost:5672", backend="rpc://"
+)
+
+celery.conf.task_routes = {"pipeline.*": {"queue": "pipeline"}}
 
 
 @app.teardown_appcontext

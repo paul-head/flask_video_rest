@@ -1,10 +1,11 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from videoblog import logger, docs
 from videoblog.schemas import VideoSchema
 from videoblog.models import Video
 from flask_apispec import use_kwargs, marshal_with
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from videoblog.base_view import BaseView
+from videoblog.utils import upload_file
 
 
 videos = Blueprint("videos", __name__)
@@ -43,10 +44,17 @@ def get_list():
 @use_kwargs(VideoSchema)
 @marshal_with(VideoSchema)
 def update_list(**kwargs):
+    files = request.files.getlist("media[]")
+    if not files:
+        return "", 204
     try:
         user_id = get_jwt_identity()
         new_one = Video(user_id=user_id, **kwargs)
         new_one.save()
+
+        upload_file(files[0], user_id, new_one.id)
+        if len(files) > 1:
+            upload_file(files[1], user_id, new_one.id, field="cover")
     except Exception as e:
         logger.warning(
             f"user:{user_id} tutorials - create action failed with errors: {e}"

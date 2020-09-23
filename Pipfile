@@ -17,6 +17,9 @@ flask-apispec = "*"
 python-dotenv = "*"
 black = "*"
 gunicorn = "*"
+boto3 = "*"
+celery = "*"
+flask-cors = "*"
 
 [requires]
 python_version = "3.8"
