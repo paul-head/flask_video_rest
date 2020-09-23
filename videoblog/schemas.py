@@ -6,6 +6,8 @@ class VideoSchema(Schema):
     user_id = fields.Integer(dump_only=True)
     name = fields.String(required=True, validate=validate.Length(max=250))
     description = fields.String(required=True, validate=validate.Length(max=500))
+    url = fields.String(dump_only=True)
+    cover =fields.String(dump_only=True)
     message = fields.String(dump_only=True)
 
 

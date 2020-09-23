@@ -11,6 +11,8 @@ class Video(Base):
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     name = db.Column(db.String(250), nullable=False)
     description = db.Column(db.String(500), nullable=False)
+    url = db.Column(db.String, nullable=True)
+    cover = db.Column(db.String, nullable=True)
 
     @classmethod
     def get_user_list(cls, user_id):
